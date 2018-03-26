@@ -16,6 +16,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.example.foo.wormgameapp.grid.VerticalGrid;
+
 import java.util.Random;
 
 /**
@@ -50,11 +52,13 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
     protected int mIdxAppleY;
     protected int mIdxSnakeX;
     protected int mIdxSnakeY;
-    protected float mAppleLeft, mAppleTop, mAppleRight, mAppleBottom;
-    protected float mSnakeLeft, mSnakeTop, mSnakeRight, mSnakeBottom;
+    protected float mAppleBottom, mAppleLeft, mAppleRight, mAppleTop;
+    protected float mSnakeBottom, mSnakeLeft, mSnakeRight, mSnakeTop;
     protected PointF mPointTouchDown = new PointF();
-    protected boolean mMoveLeft, mMoveTop, mMoveRight, mMoveBottom;
+    protected boolean mMoveBottom, mMoveLeft, mMoveRight, mMoveTop;
     protected long mPrevMillis;
+    protected float mGridHstartX, mGridHstartY, mGridHstopX, mGridHstopY;
+    protected float mGridVstartX, mGridVstartY, mGridVstopX, mGridVstopY;
 
 
 
@@ -135,6 +139,7 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
         mIdxSnakeX = 1;
         mIdxSnakeY = 1;
 
+        this.setGrid();
 
 
         boolean debug = false;
@@ -213,7 +218,13 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
         }
         mCanvas.drawColor(Color.BLACK);
 
-        this.drawGrid();
+        // draw vertical grid
+        for (int i = 0; i < mGridX.length; i++) {
+            mCanvas.drawLine(mGridX[i], mGridVstartY, mGridVstopX, mGridVstopY, mPaintGrid);
+        }
+
+        // draw horizontal grid
+        mCanvas.drawLine(mGridHstartX, mGridHstartY, mGridHstopX, mGridHstopY, mPaintGrid);
 
         // draw apple
         mCanvas.drawRect(mAppleLeft, mAppleTop, mAppleRight, mAppleBottom, mPaintApple);
@@ -258,24 +269,25 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
         Log.d(TAG, "device W: " + mDeviceWidth + ", device H: " + mDeviceHeight);
     }
 
-    protected void drawGrid() {
+    protected void setGrid() {
         // draw vertical lines..
         for (int i = 0; i < mNumVerticalBlocks; i++) {
-            float startX = (mBlockSize * i),
-                    startY = 0,
-                    stopX = startX,
-                    stopY = mDeviceHeight;
-            mGridX[i] = (int) startX;
-            mCanvas.drawLine(startX, startY, stopX, stopY, mPaintGrid);
+            float startX = (mBlockSize * i);
+            float startY = 0.0f;
+            PointF px = new PointF(startX, startY);
+            float stopX = mGridVstartX;
+            float stopY = mDeviceHeight;
+            PointF py = new PointF(stopX, stopY);
+            VerticalGrid vg = new VerticalGrid(px, py);
+            mGridX[i] = (int) vg.getStart().x;
         }
         // draw horizontal lines..
         for (int i = 0; i < mNumHorizontalBlocks; i++) {
-            float startX = 0f,
-                    startY = (mBlockSize * i),
-                    stopX = mDeviceWidth,
-                    stopY = startY;
-            mGridY[i] = (int) startY;
-            mCanvas.drawLine(startX, startY, stopX, stopY, mPaintGrid);
+            mGridHstartX = 0.0f;
+            mGridHstartY = (mBlockSize * i);
+            mGridHstopX = mDeviceWidth;
+            mGridHstopY = mGridHstartY;
+            mGridY[i] = (int) mGridHstartY;
         }
     }
 
