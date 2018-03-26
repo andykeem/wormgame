@@ -53,6 +53,8 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
     protected float mAppleLeft, mAppleTop, mAppleRight, mAppleBottom;
     protected float mSnakeLeft, mSnakeTop, mSnakeRight, mSnakeBottom;
     protected PointF mPointTouchDown = new PointF();
+    protected boolean mMoveLeft, mMoveTop, mMoveRight, mMoveBottom;
+    protected long mPrevMillis;
 
 
 
@@ -89,14 +91,22 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
                 if (absDx > absDy) { // move horizontally
                     if (dx < 0) { // move to left
                         Log.d(TAG, "LEFT");
-                    } else if (0 < dx) { // move to right
+                        this.resetMove();
+                        mMoveLeft = true;
+                    } else if ((0 < dx) && !mMoveRight) { // move to right
                         Log.d(TAG, "RIGHT");
+                        this.resetMove();
+                        mMoveRight = true;
                     }
                 } else if (absDx < absDy) { // move vertically
                     if (dy < 0) { // move to top
                         Log.d(TAG, "TOP");
+                        this.resetMove();
+                        mMoveTop = true;
                     } else if (0 < dy) { // move to bottom
                         Log.d(TAG, "BOTTOM");
+                        this.resetMove();
+                        mMoveBottom = true;
                     }
                 }
                 break;
@@ -167,7 +177,23 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
         mSnakeRight = (mSnakeLeft + mBlockSize);
         mSnakeBottom = (mSnakeTop + mBlockSize);
 
-
+        if (mMoveBottom) {
+            if (mIdxSnakeY < (mGridY.length - 1)){
+                mIdxSnakeY++;
+            }
+        } else if (mMoveLeft) {
+            if (mIdxSnakeX > 0) {
+                mIdxSnakeX--;
+            }
+        } else if (mMoveRight) {
+            if (mIdxSnakeX < (mGridX.length - 1)) {
+                mIdxSnakeX++;
+            }
+        } else if (mMoveTop) {
+            if (mIdxSnakeY > 0) {
+                mIdxSnakeY--;
+            }
+        }
 
 
 
@@ -199,11 +225,17 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
     }
 
     protected void controlFPS() {
-        try {
-            Thread.sleep(15);
-        } catch (InterruptedException ie) {
-            Log.e(TAG, ie.getMessage(), ie);
+        long sleepMillis = 500;
+        long elapsedMillis = (System.currentTimeMillis() - mPrevMillis);
+        sleepMillis -= elapsedMillis;
+        if (sleepMillis > 0) {
+            try {
+                Thread.sleep(sleepMillis);
+            } catch (InterruptedException ie) {
+                Log.e(TAG, ie.getMessage(), ie);
+            }
         }
+        mPrevMillis = System.currentTimeMillis();
     }
 
     private void hideNavigationBar() {
@@ -245,5 +277,9 @@ public class GameView extends SurfaceView implements Runnable, View.OnTouchListe
             mGridY[i] = (int) startY;
             mCanvas.drawLine(startX, startY, stopX, stopY, mPaintGrid);
         }
+    }
+
+    protected void resetMove() {
+        mMoveBottom = mMoveLeft = mMoveRight = mMoveTop = false;
     }
 }
